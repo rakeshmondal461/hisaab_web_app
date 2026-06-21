@@ -191,17 +191,17 @@ export default function ExpensesPage() {
               </div>
             </div>
             <div className="stat-chip">
+              <div className="chip-label">Budget</div>
+              <div className="chip-value text-error">
+                {state.currency}
+                {fmt(budget.totalBudget)}
+              </div>
+            </div>
+            <div className="stat-chip">
               <div className="chip-label">Remaining Balance</div>
               <div className="chip-value text-success">
                 +{state.currency}
                 {fmt(Math.abs(remainingBudget))}
-              </div>
-            </div>
-            <div className="stat-chip">
-              <div className="chip-label">Budget</div>
-              <div className="chip-value text-error">
-                -{state.currency}
-                {fmt(budget.totalBudget)}
               </div>
             </div>
           </div>
