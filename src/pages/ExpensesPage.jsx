@@ -44,13 +44,15 @@ export default function ExpensesPage() {
   const monthExpenses = expensesForMonth(year, month);
   const spentThisMonth = totalSpentForMonth(year, month);
   const incomeThisMonth = totalIncomeForMonth(year, month);
-  const remaining = incomeThisMonth - spentThisMonth;
+  
 
   // Daily alert calculations
   const dailyLimit = dailyBudgetLimit(year, month);
   const budget = budgetFor(year, month);
   const hasBudget = budget.totalBudget > 0;
   const spentToday = totalSpentForDay(new Date());
+  const spent = totalSpentForMonth(year, month);
+  const remainingBudget = budget.totalBudget - spentThisMonth;
 
   const dailyAlertClass = () => {
     if (spentToday > dailyLimit) return 'daily-alert over-limit';
@@ -148,7 +150,7 @@ export default function ExpensesPage() {
         <div className="card-gradient summary-card col-left" style={{ margin: 0 }}>
           <span className="label">Remaining Balance</span>
           <div className="amount-xl" style={{ margin: '8px 0' }}>
-            {remaining >= 0 ? '' : '-'}{state.currency}{fmt(Math.abs(remaining))}
+            {remainingBudget >= 0 ? '' : '-'}{state.currency}{fmt(Math.abs(remainingBudget))}
           </div>
           <div className="stat-chips">
             <div className="stat-chip">
