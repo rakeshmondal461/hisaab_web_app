@@ -169,8 +169,7 @@ export default function PieChart({ data, symbol }) {
                 fill="var(--text)"
                 style={{
                   fontFamily: 'Georgia, serif',
-                  fontStyle: 'italic',
-                  fontSize: isHovered ? '16px' : '14px',
+                  fontSize: isHovered ? '13px' : '12px',
                   fontWeight: isHovered ? 'bold' : 'normal',
                   pointerEvents: 'none',
                   transition: 'all 0.2s'
