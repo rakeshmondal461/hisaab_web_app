@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { useApp } from '../context/AppContext.jsx';
-import MonthSelector from '../components/MonthSelector.jsx';
-import PieChart from '../components/PieChart.jsx';
-import ExpenseCard from '../components/ExpenseCard.jsx';
-import TransactionModal from '../components/TransactionModal.jsx';
-import { getCategoryInfo } from '../models/expenseModel.js';
+import React, { useState } from "react";
+import { useApp } from "../context/AppContext.jsx";
+import MonthSelector from "../components/MonthSelector.jsx";
+import PieChart from "../components/PieChart.jsx";
+import ExpenseCard from "../components/ExpenseCard.jsx";
+import TransactionModal from "../components/TransactionModal.jsx";
+import { getCategoryInfo } from "../models/expenseModel.js";
 
 function formatSeparatorDate(dateStr) {
   const d = new Date(dateStr);
@@ -12,13 +12,20 @@ function formatSeparatorDate(dateStr) {
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  if (d.toDateString() === today.toDateString()) return 'Today';
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function fmt(n) {
-  return Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Number(n).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 export default function ExpensesPage() {
@@ -31,7 +38,7 @@ export default function ExpensesPage() {
     spendByCategory,
     dailyBudgetLimit,
     totalSpentForDay,
-    budgetFor
+    budgetFor,
   } = useApp();
 
   const now = new Date();
@@ -44,7 +51,6 @@ export default function ExpensesPage() {
   const monthExpenses = expensesForMonth(year, month);
   const spentThisMonth = totalSpentForMonth(year, month);
   const incomeThisMonth = totalIncomeForMonth(year, month);
-  
 
   // Daily alert calculations
   const dailyLimit = dailyBudgetLimit(year, month);
@@ -55,9 +61,9 @@ export default function ExpensesPage() {
   const remainingBudget = budget.totalBudget - spentThisMonth;
 
   const dailyAlertClass = () => {
-    if (spentToday > dailyLimit) return 'daily-alert over-limit';
-    if (spentToday >= dailyLimit * 0.8) return 'daily-alert near-limit';
-    return 'daily-alert on-track';
+    if (spentToday > dailyLimit) return "daily-alert over-limit";
+    if (spentToday >= dailyLimit * 0.8) return "daily-alert near-limit";
+    return "daily-alert on-track";
   };
 
   const dailyAlertContent = () => {
@@ -67,7 +73,11 @@ export default function ExpensesPage() {
           <span>⚠️</span>
           <div>
             <div className="title-md fw-700">Over Limit</div>
-            <div className="body-sm text-error">Spent {state.currency}{fmt(spentToday)} of {state.currency}{fmt(dailyLimit)} daily budget.</div>
+            <div className="body-sm text-error">
+              Spent {state.currency}
+              {fmt(spentToday)} of {state.currency}
+              {fmt(dailyLimit)} daily budget.
+            </div>
           </div>
         </>
       );
@@ -78,7 +88,11 @@ export default function ExpensesPage() {
           <span>⚡</span>
           <div>
             <div className="title-md fw-700">Near Limit</div>
-            <div className="body-sm text-warning">Spent {state.currency}{fmt(spentToday)} of {state.currency}{fmt(dailyLimit)} daily budget.</div>
+            <div className="body-sm text-warning">
+              Spent {state.currency}
+              {fmt(spentToday)} of {state.currency}
+              {fmt(dailyLimit)} daily budget.
+            </div>
           </div>
         </>
       );
@@ -89,7 +103,9 @@ export default function ExpensesPage() {
         <div>
           <div className="title-md fw-700">On Track</div>
           <div className="body-sm text-success">
-            Daily Budget: {state.currency}{fmt(dailyLimit)}. Spent today: {state.currency}{fmt(spentToday)}.
+            Daily Budget: {state.currency}
+            {fmt(dailyLimit)}. Spent today: {state.currency}
+            {fmt(spentToday)}.
           </div>
         </div>
       </>
@@ -110,7 +126,7 @@ export default function ExpensesPage() {
 
   // Grouping expenses by Date
   const groupedExpenses = {};
-  monthExpenses.forEach(e => {
+  monthExpenses.forEach((e) => {
     const key = new Date(e.date).toDateString();
     if (!groupedExpenses[key]) {
       groupedExpenses[key] = [];
@@ -127,46 +143,76 @@ export default function ExpensesPage() {
   // Dispatch functions
   const handleSaveExpense = (expense) => {
     if (selectedExpense) {
-      dispatch({ type: 'UPDATE_EXPENSE', expense });
+      dispatch({ type: "UPDATE_EXPENSE", expense });
     } else {
-      dispatch({ type: 'ADD_EXPENSE', expense });
+      dispatch({ type: "ADD_EXPENSE", expense });
     }
   };
 
   const handleDeleteExpense = (id) => {
-    dispatch({ type: 'DELETE_EXPENSE', id });
+    dispatch({ type: "DELETE_EXPENSE", id });
   };
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 className="title-lg fw-700" style={{ margin: 0 }}>Expenses Dashboard</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+        }}
+      >
+        <h2 className="title-lg fw-700" style={{ margin: 0 }}>
+          Expenses Dashboard
+        </h2>
       </div>
 
       <MonthSelector year={year} month={month} onChange={handleMonthChange} />
 
-      <div className="dashboard-grid two-col" style={{ marginTop: '20px' }}>
+      <div className="dashboard-grid two-col" style={{ marginTop: "20px" }}>
         {/* 1. Remaining Balance Card (Left Column) */}
-        <div className="card-gradient summary-card col-left" style={{ margin: 0 }}>
-          <span className="label">Remaining Balance</span>
-          <div className="amount-xl" style={{ margin: '8px 0' }}>
-            {remainingBudget >= 0 ? '' : '-'}{state.currency}{fmt(Math.abs(remainingBudget))}
+        <div
+          className="card-gradient summary-card col-left"
+          style={{ margin: 0 }}
+        >
+          <span className="label">Total Spent</span>
+          <div className="amount-xl" style={{ margin: "8px 0" }}>
+            {state.currency}
+            {fmt(spentThisMonth)}
           </div>
+
           <div className="stat-chips">
             <div className="stat-chip">
               <div className="chip-label">Total Income</div>
-              <div className="chip-value text-success">+{state.currency}{fmt(incomeThisMonth)}</div>
+              <div className="chip-value text-success">
+                +{state.currency}
+                {fmt(incomeThisMonth)}
+              </div>
             </div>
             <div className="stat-chip">
-              <div className="chip-label">Total Spent</div>
-              <div className="chip-value text-error">-{state.currency}{fmt(spentThisMonth)}</div>
+              <div className="chip-label">Remaining Balance</div>
+              <div className="chip-value text-success">
+                +{state.currency}
+                {fmt(Math.abs(remainingBudget))}
+              </div>
+            </div>
+            <div className="stat-chip">
+              <div className="chip-label">Budget</div>
+              <div className="chip-value text-error">
+                -{state.currency}
+                {fmt(budget.totalBudget)}
+              </div>
             </div>
           </div>
         </div>
 
         {/* 2. Daily Alert Card (Right Column) */}
         {hasBudget && dailyLimit > 0 && (
-          <div className={`${dailyAlertClass()} col-right`} style={{ margin: 0 }}>
+          <div
+            className={`${dailyAlertClass()} col-right`}
+            style={{ margin: 0 }}
+          >
             {dailyAlertContent()}
           </div>
         )}
@@ -181,7 +227,12 @@ export default function ExpensesPage() {
 
         {/* 4. Transactions List (Left Column) */}
         <div className="col-left">
-          <div className="section-header" style={{ marginTop: 0, paddingLeft: 0 }}>Transactions</div>
+          <div
+            className="section-header"
+            style={{ marginTop: 0, paddingLeft: 0 }}
+          >
+            Transactions
+          </div>
 
           {monthExpenses.length === 0 ? (
             <div className="empty-state">
@@ -190,11 +241,13 @@ export default function ExpensesPage() {
               <p className="empty-sub">Add one using the + button below.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {Object.keys(groupedExpenses).map(dateStr => (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {Object.keys(groupedExpenses).map((dateStr) => (
                 <div key={dateStr}>
-                  <div className="date-separator">{formatSeparatorDate(dateStr)}</div>
-                  {groupedExpenses[dateStr].map(e => (
+                  <div className="date-separator">
+                    {formatSeparatorDate(dateStr)}
+                  </div>
+                  {groupedExpenses[dateStr].map((e) => (
                     <ExpenseCard
                       key={e.id}
                       expense={e}
