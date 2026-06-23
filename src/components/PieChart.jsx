@@ -70,8 +70,16 @@ export default function PieChart({ data, symbol }) {
   });
 
   return (
-    <div className="pie-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', margin: '16px 0' }}>
-      <svg width={sizeWidth} height={sizeHeight} style={{ overflow: 'visible' }}>
+    <div className="pie-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', margin: '8px 0' }}>
+      <svg
+        viewBox={`0 0 ${sizeWidth} ${sizeHeight}`}
+        style={{
+          width: '100%',
+          height: 'auto',
+          maxWidth: `${sizeWidth}px`,
+          overflow: 'visible',
+        }}
+      >
         {slices.map((s, i) => {
           const color = s.color || CATEGORY_COLORS[i % CATEGORY_COLORS.length];
           const isHovered = touched === i;
@@ -102,7 +110,7 @@ export default function PieChart({ data, symbol }) {
                   dominantBaseline="middle"
                   fill="#ffffff"
                   style={{
-                    fontFamily: 'Georgia, serif',
+                    fontFamily: 'inherit',
                     fontSize: '15px',
                     fontWeight: 'bold',
                     pointerEvents: 'none'
@@ -116,9 +124,9 @@ export default function PieChart({ data, symbol }) {
                   textAnchor="middle"
                   fill="var(--text)"
                   style={{
-                    fontFamily: 'Georgia, serif',
-                    fontStyle: 'italic',
-                    fontSize: '15px',
+                    fontFamily: 'inherit',
+                    fontWeight: '600',
+                    fontSize: '14px',
                     pointerEvents: 'none'
                   }}
                 >
@@ -149,7 +157,7 @@ export default function PieChart({ data, symbol }) {
                   dominantBaseline="middle"
                   fill="#ffffff"
                   style={{
-                    fontFamily: 'Georgia, serif',
+                    fontFamily: 'inherit',
                     fontSize: isHovered ? '15px' : '13px',
                     fontWeight: 'bold',
                     pointerEvents: 'none',
@@ -168,7 +176,7 @@ export default function PieChart({ data, symbol }) {
                 dominantBaseline="middle"
                 fill="var(--text)"
                 style={{
-                  fontFamily: 'Georgia, serif',
+                  fontFamily: 'inherit',
                   fontSize: isHovered ? '13px' : '12px',
                   fontWeight: isHovered ? 'bold' : 'normal',
                   pointerEvents: 'none',

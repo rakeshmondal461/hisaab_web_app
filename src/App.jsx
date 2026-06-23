@@ -4,6 +4,7 @@ import ExpensesPage from './pages/ExpensesPage.jsx';
 import BudgetPage from './pages/BudgetPage.jsx';
 import TasksPage from './pages/TasksPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import { ToastContainer } from './components/Toast.jsx';
 
 const NAV_ITEMS = [
   { key: 'expenses', label: 'Expenses', emoji: '💸' },
@@ -88,6 +89,7 @@ export default function App() {
           {renderPage()}
         </div>
       </main>
+      <ToastContainer />
     </div>
   );
 }

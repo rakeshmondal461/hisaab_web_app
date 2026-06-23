@@ -177,7 +177,7 @@ export default function ExpensesPage() {
           style={{ margin: 0 }}
         >
           <span className="label">Total Spent</span>
-          <div className="amount-xl" style={{ margin: "8px 0" }}>
+          <div className="amount-sm" style={{ margin: "8px 0" }}>
             {state.currency}
             {fmt(spentThisMonth)}
           </div>
@@ -219,7 +219,7 @@ export default function ExpensesPage() {
 
         {/* 3. Monthly Spending Card (Right Column) */}
         {chartData.length > 0 && (
-          <div className="card col-right" style={{ margin: 0 }}>
+          <div className="card col-right" style={{ marginTop: '60px' }}>
             <h3 className="title-md mb-12 fw-700">Monthly Spending Analysis</h3>
             <PieChart data={chartData} symbol={state.currency} />
           </div>
