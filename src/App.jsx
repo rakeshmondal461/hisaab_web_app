@@ -3,13 +3,15 @@ import { useApp } from './context/AppContext.jsx';
 import ExpensesPage from './pages/ExpensesPage.jsx';
 import BudgetPage from './pages/BudgetPage.jsx';
 import TasksPage from './pages/TasksPage.jsx';
+import GoalsPage from './pages/GoalsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import { ToastContainer } from './components/Toast.jsx';
 
 const NAV_ITEMS = [
   { key: 'expenses', label: 'Expenses', emoji: '💸' },
-  { key: 'budget', label: 'Budget & Savings', emoji: '🎯' },
+  { key: 'budget', label: 'Budget & Savings', emoji: '💰' },
   { key: 'tasks', label: 'Tasks', emoji: '📋' },
+   { key: 'goals', label: 'Goals', emoji: '🎯' },
   { key: 'settings', label: 'Settings', emoji: '⚙️' },
 ];
 
@@ -32,6 +34,8 @@ export default function App() {
         return <BudgetPage />;
       case 'tasks':
         return <TasksPage />;
+      case 'goals':
+        return <GoalsPage />;
       case 'settings':
         return <SettingsPage />;
       default:
