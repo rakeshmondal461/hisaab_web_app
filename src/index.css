@@ -1710,3 +1710,26 @@ input[type=range]::-webkit-slider-thumb:hover {
   color: #B45309 !important;
   background: rgba(245, 158, 11, 0.15) !important;
 }
+
+/* Responsive columns layout for Expenses page */
+.expenses-col-left,
+.expenses-col-right {
+  display: contents;
+}
+
+@media (min-width: 768px) {
+  .expenses-col-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 1;
+    align-self: start;
+  }
+  .expenses-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 2;
+    align-self: start;
+  }
+}

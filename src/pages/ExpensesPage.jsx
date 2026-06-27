@@ -4,7 +4,7 @@ import MonthSelector from "../components/MonthSelector.jsx";
 import PieChart from "../components/PieChart.jsx";
 import ExpenseCard from "../components/ExpenseCard.jsx";
 import TransactionModal from "../components/TransactionModal.jsx";
-import { getCategoryInfo } from "../models/expenseModel.js";
+import { getCategoryInfo, EXPENSE_CATEGORIES } from "../models/expenseModel.js";
 
 function formatSeparatorDate(dateStr) {
   const d = new Date(dateStr);
@@ -114,6 +114,7 @@ export default function ExpensesPage() {
 
   // Pie chart calculation
   const categorySpent = spendByCategory(year, month);
+  const activeCategories = EXPENSE_CATEGORIES.filter(cat => (categorySpent[cat.key] || 0) > 0);
   const chartData = Object.entries(categorySpent).map(([key, val]) => {
     const info = getCategoryInfo(key, false);
     return {
@@ -171,95 +172,133 @@ export default function ExpensesPage() {
       <MonthSelector year={year} month={month} onChange={handleMonthChange} />
 
       <div className="dashboard-grid two-col" style={{ marginTop: "20px" }}>
-        {/* 1. Remaining Balance Card (Left Column) */}
-        <div
-          className="card-gradient summary-card col-left"
-          style={{ margin: 0 }}
-        >
-          <span className="label">Total Spent</span>
-          <div className="amount-sm" style={{ margin: "8px 0" }}>
-            {state.currency}
-            {fmt(spentThisMonth)}
+        {/* 1. Left Column: Total Spent Card + Daily Alert + Transactions List */}
+        <div className="expenses-col-left">
+          <div
+            className="card-gradient summary-card"
+            style={{ margin: 0, order: 1 }}
+          >
+            <span className="label">Total Spent</span>
+            <div className="amount-sm" style={{ margin: "8px 0" }}>
+              {state.currency}
+              {fmt(spentThisMonth)}
+            </div>
+
+            <div className="stat-chips">
+              <div className="stat-chip">
+                <div className="chip-label">Total Income</div>
+                <div className="chip-value text-success">
+                  +{state.currency}
+                  {fmt(incomeThisMonth)}
+                </div>
+              </div>
+              <div className="stat-chip">
+                <div className="chip-label">Budget</div>
+                <div className="chip-value text-error">
+                  {state.currency}
+                  {fmt(budget.totalBudget)}
+                </div>
+              </div>
+              <div className="stat-chip">
+                <div className="chip-label">Remaining Balance</div>
+                <div className="chip-value text-success">
+                  +{state.currency}
+                  {fmt(Math.abs(remainingBudget))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="stat-chips">
-            <div className="stat-chip">
-              <div className="chip-label">Total Income</div>
-              <div className="chip-value text-success">
-                +{state.currency}
-                {fmt(incomeThisMonth)}
-              </div>
+          {/* Daily Alert directly below Total Spent */}
+          {hasBudget && dailyLimit > 0 && (
+            <div
+              className={`${dailyAlertClass()}`}
+              style={{ margin: 0, order: 2 }}
+            >
+              {dailyAlertContent()}
             </div>
-            <div className="stat-chip">
-              <div className="chip-label">Budget</div>
-              <div className="chip-value text-error">
-                {state.currency}
-                {fmt(budget.totalBudget)}
-              </div>
+          )}
+
+          {/* Transactions List */}
+          <div style={{ order: 5 }}>
+            <div
+              className="section-header"
+              style={{ marginTop: '8px', paddingLeft: 0 }}
+            >
+              Transactions
             </div>
-            <div className="stat-chip">
-              <div className="chip-label">Remaining Balance</div>
-              <div className="chip-value text-success">
-                +{state.currency}
-                {fmt(Math.abs(remainingBudget))}
+
+            {monthExpenses.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-emoji">💸</span>
+                <h3 className="empty-title">No transactions yet</h3>
+                <p className="empty-sub">Add one using the + button below.</p>
               </div>
-            </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {Object.keys(groupedExpenses).map((dateStr) => (
+                  <div key={dateStr}>
+                    <div className="date-separator">
+                      {formatSeparatorDate(dateStr)}
+                    </div>
+                    {groupedExpenses[dateStr].map((e) => (
+                      <ExpenseCard
+                        key={e.id}
+                        expense={e}
+                        symbol={state.currency}
+                        onClick={() => {
+                          setSelectedExpense(e);
+                          setIsModalOpen(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* 2. Daily Alert Card (Right Column) */}
-        {hasBudget && dailyLimit > 0 && (
-          <div
-            className={`${dailyAlertClass()} col-right`}
-            style={{ margin: 0 }}
-          >
-            {dailyAlertContent()}
-          </div>
-        )}
-
-        {/* 3. Monthly Spending Card (Right Column) */}
-        {chartData.length > 0 && (
-          <div className="card col-right" style={{ marginTop: '60px' }}>
-            <h3 className="title-md mb-12 fw-700">Monthly Spending Analysis</h3>
-            <PieChart data={chartData} symbol={state.currency} />
-          </div>
-        )}
-
-        {/* 4. Transactions List (Left Column) */}
-        <div className="col-left">
-          <div
-            className="section-header"
-            style={{ marginTop: 0, paddingLeft: 0 }}
-          >
-            Transactions
-          </div>
-
-          {monthExpenses.length === 0 ? (
-            <div className="empty-state">
-              <span className="empty-emoji">💸</span>
-              <h3 className="empty-title">No transactions yet</h3>
-              <p className="empty-sub">Add one using the + button below.</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {Object.keys(groupedExpenses).map((dateStr) => (
-                <div key={dateStr}>
-                  <div className="date-separator">
-                    {formatSeparatorDate(dateStr)}
+        {/* 2. Right Column: Category-wise Expense Card + Monthly Spending Analysis */}
+        <div className="expenses-col-right">
+          {/* Category-wise Monthly Expense Card */}
+          <div className="card" style={{ margin: 0, padding: '16px', order: 3 }}>
+            <h3 className="title-md fw-700" style={{ marginBottom: '12px', fontSize: '14px' }}>Category Expenses</h3>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {activeCategories.map((cat, idx) => {
+                const catSpent = categorySpent[cat.key] || 0;
+                return (
+                  <div 
+                    key={cat.key} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '8px 4px', 
+                      borderBottom: idx < activeCategories.length - 1 ? '1px solid var(--divider)' : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '16px', lineHeight: 1 }}>{cat.emoji}</span>
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text2)' }}>{cat.label}</span>
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: cat.color }}>
+                      {state.currency}{fmt(catSpent)}
+                    </span>
                   </div>
-                  {groupedExpenses[dateStr].map((e) => (
-                    <ExpenseCard
-                      key={e.id}
-                      expense={e}
-                      symbol={state.currency}
-                      onClick={() => {
-                        setSelectedExpense(e);
-                        setIsModalOpen(true);
-                      }}
-                    />
-                  ))}
-                </div>
-              ))}
+                );
+              })}
+              {activeCategories.length === 0 && (
+                <p style={{ color: 'var(--text2)', fontSize: '13px', textAlign: 'center', padding: '8px 0' }}>No expenses this month</p>
+              )}
+            </div>
+          </div>
+
+          {/* Monthly Spending Analysis Pie Chart */}
+          {chartData.length > 0 && (
+            <div className="card" style={{ margin: 0, order: 4 }}>
+              <h3 className="title-md mb-12 fw-700">Monthly Spending Analysis</h3>
+              <PieChart data={chartData} symbol={state.currency} />
             </div>
           )}
         </div>

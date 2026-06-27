@@ -1,6 +1,16 @@
-import React, { createContext, useContext, useReducer, useEffect, useState, useRef } from 'react';
-import { db } from '../services/db.js';
-import { budgetKey, createBudgetFromSavingsPlan } from '../models/budgetModel.js';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
+import { db } from "../services/db.js";
+import {
+  budgetKey,
+  createBudgetFromSavingsPlan,
+} from "../models/budgetModel.js";
 
 const AppContext = createContext(null);
 
@@ -8,47 +18,114 @@ const initialState = {
   expenses: [],
   budgets: {},
   tasks: [],
-  theme: 'dark',
-  currency: '₹',
+  goals: [],
+  goalProgress: {},
+  theme: "dark",
+  currency: "₹",
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'LOAD': return { ...state, ...action.payload };
+    case "LOAD":
+      return { ...state, ...action.payload };
 
-    case 'ADD_EXPENSE': return { ...state, expenses: [action.expense, ...state.expenses] };
-    case 'UPDATE_EXPENSE': return { ...state, expenses: state.expenses.map(e => e.id === action.expense.id ? action.expense : e) };
-    case 'DELETE_EXPENSE': return { ...state, expenses: state.expenses.filter(e => e.id !== action.id) };
-    case 'IMPORT_EXPENSES': {
-      const ids = new Set(state.expenses.map(e => e.id));
-      const newOnes = action.expenses.filter(e => !ids.has(e.id));
+    case "ADD_EXPENSE":
+      return { ...state, expenses: [action.expense, ...state.expenses] };
+    case "UPDATE_EXPENSE":
+      return {
+        ...state,
+        expenses: state.expenses.map((e) =>
+          e.id === action.expense.id ? action.expense : e,
+        ),
+      };
+    case "DELETE_EXPENSE":
+      return {
+        ...state,
+        expenses: state.expenses.filter((e) => e.id !== action.id),
+      };
+    case "IMPORT_EXPENSES": {
+      const ids = new Set(state.expenses.map((e) => e.id));
+      const newOnes = action.expenses.filter((e) => !ids.has(e.id));
       return { ...state, expenses: [...newOnes, ...state.expenses] };
     }
 
-    case 'SAVE_BUDGET': {
+    case "SAVE_BUDGET": {
       const key = budgetKey(action.budget.year, action.budget.month);
       return { ...state, budgets: { ...state.budgets, [key]: action.budget } };
     }
-    case 'IMPORT_BUDGETS': {
+    case "IMPORT_BUDGETS": {
       const merged = { ...state.budgets };
-      Object.entries(action.budgets).forEach(([k, v]) => { if (!merged[k]) merged[k] = v; });
+      Object.entries(action.budgets).forEach(([k, v]) => {
+        if (!merged[k]) merged[k] = v;
+      });
       return { ...state, budgets: merged };
     }
 
-    case 'ADD_TASK': return { ...state, tasks: [action.task, ...state.tasks] };
-    case 'UPDATE_TASK': return { ...state, tasks: state.tasks.map(t => t.id === action.task.id ? action.task : t) };
-    case 'DELETE_TASK': return { ...state, tasks: state.tasks.filter(t => t.id !== action.id) };
-    case 'IMPORT_TASKS': {
-      const ids = new Set(state.tasks.map(t => t.id));
-      const newOnes = action.tasks.filter(t => !ids.has(t.id));
+    case "ADD_TASK":
+      return { ...state, tasks: [action.task, ...state.tasks] };
+    case "UPDATE_TASK":
+      return {
+        ...state,
+        tasks: state.tasks.map((t) =>
+          t.id === action.task.id ? action.task : t,
+        ),
+      };
+    case "DELETE_TASK":
+      return { ...state, tasks: state.tasks.filter((t) => t.id !== action.id) };
+    case "IMPORT_TASKS": {
+      const ids = new Set(state.tasks.map((t) => t.id));
+      const newOnes = action.tasks.filter((t) => !ids.has(t.id));
       return { ...state, tasks: [...newOnes, ...state.tasks] };
     }
 
-    case 'SET_THEME': return { ...state, theme: action.theme };
-    case 'SET_CURRENCY': return { ...state, currency: action.currency };
-    case 'CLEAR_ALL_DATA': return { ...initialState, theme: state.theme, currency: state.currency };
+    case "ADD_GOAL":
+      return { ...state, goals: [action.goal, ...state.goals] };
+    case "UPDATE_GOAL":
+      return {
+        ...state,
+        goals: state.goals.map((g) =>
+          g.id === action.goal.id ? action.goal : g,
+        ),
+      };
+    case "DELETE_GOAL":
+      return { ...state, goals: state.goals.filter((g) => g.id !== action.id) };
+    case "IMPORT_GOALS": {
+      const ids = new Set(state.goals.map((g) => g.id));
+      const newOnes = action.goals.filter((g) => !ids.has(g.id));
+      return { ...state, goals: [...newOnes, ...state.goals] };
+    }
+    case "SET_GOAL_PROGRESS": {
+      const daySlice = {
+        ...(state.goalProgress[action.dateStr] ?? {}),
+        [action.goalId]: action.value,
+      };
+      return {
+        ...state,
+        goalProgress: { ...state.goalProgress, [action.dateStr]: daySlice },
+      };
+    }
 
-    default: return state;
+    case "IMPORT_GOAL_PROGRESS": {
+      const merged = { ...state.goalProgress };
+      Object.entries(action.goalProgress).forEach(([dateStr, goals]) => {
+        if (!merged[dateStr]) {
+          merged[dateStr] = goals;
+        } else {
+          merged[dateStr] = { ...goals, ...merged[dateStr] };
+        }
+      });
+      return { ...state, goalProgress: merged };
+    }
+
+    case "SET_THEME":
+      return { ...state, theme: action.theme };
+    case "SET_CURRENCY":
+      return { ...state, currency: action.currency };
+    case "CLEAR_ALL_DATA":
+      return { ...initialState, theme: state.theme, currency: state.currency };
+
+    default:
+      return state;
   }
 }
 
@@ -63,14 +140,32 @@ export function AppProvider({ children }) {
   useEffect(() => {
     async function loadFromDB() {
       try {
-        const [expenses, budgets, tasks, theme, currency] = await Promise.all([
-          db.get('expenses', []),
-          db.get('budgets', {}),
-          db.get('tasks', []),
-          db.get('theme', 'dark'),
-          db.get('currency', '₹'),
-        ]);
-        dispatch({ type: 'LOAD', payload: { expenses, budgets, tasks, theme, currency } });
+        const [expenses, budgets, tasks, goals, goalProgress, theme, currency] =
+          await Promise.all([
+            db.get("expenses", []),
+            db.get("budgets", {}),
+            db.get("tasks", []),
+            db.get("goals", []),
+            db.get("goalProgress", {}),
+            db.get("theme", "dark"),
+            db.get("currency", "₹"),
+          ]);
+        dispatch({
+          type: "LOAD",
+          payload: {
+            expenses,
+            budgets,
+            tasks,
+            goals,
+            goalProgress,
+            theme,
+            currency,
+          },
+        });
+        dispatch({
+          type: "LOAD",
+          payload: { expenses, budgets, tasks, goals, theme, currency },
+        });
       } finally {
         // Mark as loaded BEFORE setIsLoading so write effects activate correctly
         isLoaded.current = true;
@@ -83,37 +178,73 @@ export function AppProvider({ children }) {
   // ── Persist each slice to IndexedDB on change ────────────────────────
   // Guard: skip the very first run (initial mount with empty state) so we
   // don't overwrite IndexedDB before the async read above has finished.
-  useEffect(() => { if (isLoaded.current) db.set('expenses', state.expenses); }, [state.expenses]);
-  useEffect(() => { if (isLoaded.current) db.set('budgets',  state.budgets);  }, [state.budgets]);
-  useEffect(() => { if (isLoaded.current) db.set('tasks',    state.tasks);    }, [state.tasks]);
-  useEffect(() => { if (isLoaded.current) db.set('theme',    state.theme);    }, [state.theme]);
-  useEffect(() => { if (isLoaded.current) db.set('currency', state.currency); }, [state.currency]);
+  useEffect(() => {
+    if (isLoaded.current) db.set("expenses", state.expenses);
+  }, [state.expenses]);
+  useEffect(() => {
+    if (isLoaded.current) db.set("budgets", state.budgets);
+  }, [state.budgets]);
+  useEffect(() => {
+    if (isLoaded.current) db.set("tasks", state.tasks);
+  }, [state.tasks]);
+  useEffect(() => {
+    if (isLoaded.current) db.set("goals", state.goals);
+  }, [state.goals]);
+  useEffect(() => {
+    if (isLoaded.current) db.set("theme", state.theme);
+  }, [state.theme]);
+  useEffect(() => {
+    if (isLoaded.current) db.set("currency", state.currency);
+  }, [state.currency]);
+
+  useEffect(() => {
+    if (isLoaded.current) db.set("goalProgress", state.goalProgress);
+  }, [state.goalProgress]);
 
   // ── Computed helpers ──────────────────────────────────────────────────────
   function expensesForMonth(year, month) {
     return state.expenses
-      .filter(e => { const d = new Date(e.date); return d.getFullYear() === year && d.getMonth() + 1 === month; })
+      .filter((e) => {
+        const d = new Date(e.date);
+        return d.getFullYear() === year && d.getMonth() + 1 === month;
+      })
       .sort((a, b) => new Date(b.date) - new Date(a.date));
   }
 
   function totalSpentForMonth(year, month) {
-    return expensesForMonth(year, month).filter(e => !e.isIncome).reduce((s, e) => s + e.amount, 0);
+    return expensesForMonth(year, month)
+      .filter((e) => !e.isIncome)
+      .reduce((s, e) => s + e.amount, 0);
   }
 
   function totalIncomeForMonth(year, month) {
-    return expensesForMonth(year, month).filter(e => e.isIncome).reduce((s, e) => s + e.amount, 0);
+    return expensesForMonth(year, month)
+      .filter((e) => e.isIncome)
+      .reduce((s, e) => s + e.amount, 0);
   }
 
   function spendByCategory(year, month) {
     const map = {};
-    expensesForMonth(year, month).filter(e => !e.isIncome).forEach(e => {
-      map[e.category] = (map[e.category] || 0) + e.amount;
-    });
+    expensesForMonth(year, month)
+      .filter((e) => !e.isIncome)
+      .forEach((e) => {
+        map[e.category] = (map[e.category] || 0) + e.amount;
+      });
     return map;
   }
 
   function budgetFor(year, month) {
-    return state.budgets[budgetKey(year, month)] || { categoryBudgets: {}, totalBudget: 0, savingsTarget: 0, monthlyIncome: 0, isAutoMode: false, month, year };
+    return (
+      state.budgets[budgetKey(year, month)] || {
+        categoryBudgets: {},
+        totalBudget: 0,
+        savingsTarget: 0,
+        monthlyIncome: 0,
+        isAutoMode: false,
+        month,
+        year,
+      }
+    );
   }
 
   function dailyBudgetLimit(year, month) {
@@ -121,7 +252,8 @@ export function AppProvider({ children }) {
     if (!b.totalBudget) return 0;
     const now = new Date();
     const daysInMonth = new Date(year, month, 0).getDate();
-    const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
+    const isCurrentMonth =
+      now.getFullYear() === year && now.getMonth() + 1 === month;
     if (!isCurrentMonth) return b.totalBudget / daysInMonth;
     const remainingDays = daysInMonth - now.getDate() + 1;
     if (remainingDays <= 0) return 0;
@@ -131,10 +263,17 @@ export function AppProvider({ children }) {
 
   function totalSpentForDay(date) {
     const d = new Date(date);
-    return state.expenses.filter(e => {
-      const ed = new Date(e.date);
-      return !e.isIncome && ed.getFullYear() === d.getFullYear() && ed.getMonth() === d.getMonth() && ed.getDate() === d.getDate();
-    }).reduce((s, e) => s + e.amount, 0);
+    return state.expenses
+      .filter((e) => {
+        const ed = new Date(e.date);
+        return (
+          !e.isIncome &&
+          ed.getFullYear() === d.getFullYear() &&
+          ed.getMonth() === d.getMonth() &&
+          ed.getDate() === d.getDate()
+        );
+      })
+      .reduce((s, e) => s + e.amount, 0);
   }
 
   function actualSavingsForMonth(year, month) {
@@ -144,30 +283,54 @@ export function AppProvider({ children }) {
   function savingsProgressForMonth(year, month) {
     const b = budgetFor(year, month);
     if (!b.savingsTarget) return 0;
-    return Math.min(1, Math.max(0, actualSavingsForMonth(year, month) / b.savingsTarget));
+    return Math.min(
+      1,
+      Math.max(0, actualSavingsForMonth(year, month) / b.savingsTarget),
+    );
   }
 
   const value = {
-    state, dispatch,
-    expensesForMonth, totalSpentForMonth, totalIncomeForMonth,
-    spendByCategory, budgetFor, dailyBudgetLimit, totalSpentForDay,
-    actualSavingsForMonth, savingsProgressForMonth,
+    state,
+    dispatch,
+    expensesForMonth,
+    totalSpentForMonth,
+    totalIncomeForMonth,
+    spendByCategory,
+    budgetFor,
+    dailyBudgetLimit,
+    totalSpentForDay,
+    actualSavingsForMonth,
+    savingsProgressForMonth,
   };
 
   // Block rendering until the first DB load completes to avoid a
   // flash of empty/default state on startup.
   if (isLoading) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: 'var(--bg)', flexDirection: 'column', gap: '12px'
-      }}>
-        <div style={{
-          width: '40px', height: '40px', borderRadius: '50%',
-          border: '3px solid var(--primary)', borderTopColor: 'transparent',
-          animation: 'spin 0.8s linear infinite'
-        }} />
-        <span style={{ color: 'var(--text2)', fontSize: '14px' }}>Loading HiSaab…</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          background: "var(--bg)",
+          flexDirection: "column",
+          gap: "12px",
+        }}
+      >
+        <div
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            border: "3px solid var(--primary)",
+            borderTopColor: "transparent",
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
+        <span style={{ color: "var(--text2)", fontSize: "14px" }}>
+          Loading HiSaab…
+        </span>
       </div>
     );
   }
@@ -175,4 +338,6 @@ export function AppProvider({ children }) {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
-export function useApp() { return useContext(AppContext); }
+export function useApp() {
+  return useContext(AppContext);
+}
